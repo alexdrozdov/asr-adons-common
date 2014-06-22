@@ -51,7 +51,7 @@ class Frame_ViewHandlers(interface_view_handlers.ViewHandlers):
 
 def init_module(manager, gui):
     frame = Frame_ViewHandlers(manager)
-    gui.register_window(frame, "Контроль обработчиков", "wnd_view_handlers")
+    gui.register_window(frame, u"Контроль обработчиков", "wnd_view_handlers")
 
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)

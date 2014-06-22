@@ -329,6 +329,6 @@ class ViewResultsInst(view_results_interface.ViewResults):
 
 def init_module(manager, gui):
     vi = ViewResultsInst(manager)
-    gui.register_window(vi, "Отображение результатов", "wnd_results")
+    gui.register_window(vi, u"Отображение результатов", "wnd_results")
     return vi
 

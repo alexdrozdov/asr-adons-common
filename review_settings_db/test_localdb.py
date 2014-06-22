@@ -51,7 +51,7 @@ class Display_localdb(interface.MyFrame):
 
 def init_module(manager, gui):
     frame = Display_localdb(manager)
-    gui.register_window(frame, "Просмотр параметров локальной БД", "wnd_view_settings_db")
+    gui.register_window(frame, u"Просмотр параметров локальной БД", "wnd_view_settings_db")
 
 
 if __name__ == "__main__":
