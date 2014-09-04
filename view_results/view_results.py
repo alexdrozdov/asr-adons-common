@@ -56,6 +56,7 @@ class TicketNode:
 class TicketTree:
     def __init__(self):
         self.root_nodes = {}
+        self.max_ticket_id = 0
     def clear(self):
         pass
     def add_ticket(self, ticket):
@@ -66,12 +67,16 @@ class TicketTree:
                 self.root_nodes[leading_id].add_ticket(ticket, id_track[1:])
             else:
                 self.root_nodes[leading_id] = TicketNode(ticket, id_track)
+            if self.max_ticket_id<leading_id:
+                self.max_ticket_id = leading_id
         except:
             print traceback.format_exc()
             print ticket
     def print_tree(self):
         for k in self.root_nodes.keys():
             self.root_nodes[k].print_node()
+    def get_max_ticket_id(self):
+        return self.max_ticket_id
 
 
 class ResultFrame:
@@ -97,6 +102,8 @@ class ResultFrame:
             self.readonly = readonly
         except:
             print traceback.format_exc()
+    def get_max_ticket_id(self):
+        return self.tt.get_max_ticket_id()
 
 class StandaloneResultFrame:
     def __init__(self, ticket_tree):
@@ -126,6 +133,7 @@ class ViewResultsInst(view_results_interface.ViewResults):
         view_results_interface.ViewResults.__init__(self, None, -1, "")
         self.Bind(wx.EVT_CLOSE, self.btnClose_handler, self)
         self.Bind(wx.EVT_SHOW,  self.OnShow_handler, self)
+        self.Bind(wx.EVT_CONTEXT_MENU, self.treeResults_on_right_click)
         self.lbShowableResults.Bind(wx.EVT_RIGHT_UP, self.lbShowableResults_rightclick)
         self.treeResults.SetMinSize(wx.Size(w=100, h=100))
         self.man = manager
@@ -179,6 +187,45 @@ class ViewResultsInst(view_results_interface.ViewResults):
             self.comboFilter.SetItems(filter_items)
         except:
             pass
+    
+    def treeResults_on_right_click(self, event):
+        itm = self.treeResults.GetSelection()
+        ticket = self.treeResults.GetItemPyData(itm)
+        if None == ticket:
+            return
+        
+        menu = MenuEx()
+        menu.Append(u"Отправить выбранное повторно", self.treeResults_on_send_again, ticket)
+        menu.Append(u"Сохранить выбранное как фрейм...", self.treeResults_on_save_as_frame)
+        menu.Append(u"Отобразить...", self.treeResults_on_show_as)
+        menu.Append(u"Добавить к отображению...", self.treeResults_on_add_as)
+        self.treeResults.PopupMenu(menu)
+        
+    def treeResults_on_send_again(self, event):
+        item_id = event.GetId()
+        menu = event.GetEventObject()
+        original_ticket = menu.GetPyData(item_id)
+        self.man.push_ticket(self.man.ticket(original_ticket.get_data_name(), original_ticket.get_data(), original_ticket.description))
+        #self.results_to_view.remove_ticket(itm_data[0])
+        #self.results_to_view.update_view_widget(self.lbShowableResults)
+    def treeResults_on_save_as_frame(self, event):
+        item_id = event.GetId()
+        menu = event.GetEventObject()
+        itm_data = menu.GetPyData(item_id)
+        #self.results_to_view.remove_ticket(itm_data[0])
+        #self.results_to_view.update_view_widget(self.lbShowableResults)
+    def treeResults_on_show_as(self, event):
+        item_id = event.GetId()
+        menu = event.GetEventObject()
+        itm_data = menu.GetPyData(item_id)
+        #self.results_to_view.remove_ticket(itm_data[0])
+        #self.results_to_view.update_view_widget(self.lbShowableResults)
+    def treeResults_on_add_as(self, event):
+        item_id = event.GetId()
+        menu = event.GetEventObject()
+        itm_data = menu.GetPyData(item_id)
+        #self.results_to_view.remove_ticket(itm_data[0])
+        #self.results_to_view.update_view_widget(self.lbShowableResults)
 
     def comboFilter_Enter_handler(self, event):
         self.show_result_frame()
@@ -212,7 +259,8 @@ class ViewResultsInst(view_results_interface.ViewResults):
         dialog.Destroy()
         if None == filename:
             return
-        self.rf.load(filename, readonly=True)
+        self.rf.load(filename, readonly=False)
+        self.man.set_ticketid_low_limit(self.rf.get_max_ticket_id()+1)
         self.show_result_frame()
 
     def OnShow_handler(self, event):
