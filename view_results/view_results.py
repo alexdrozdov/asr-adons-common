@@ -80,9 +80,10 @@ class TicketTree:
 
 
 class ResultFrame:
-    def __init__(self, manager):
+    def __init__(self, manager = None):
         self.man = manager
-        self.man.register_handler(None, self.handle_all_tickets)
+        if None != self.man:
+            self.man.register_handler(None, self.handle_all_tickets)
         self.tt = TicketTree()
         self.readonly = False
 
@@ -90,7 +91,8 @@ class ResultFrame:
         if self.readonly:
             return
         self.tt.add_ticket(ticket)
-
+    def add_ticket(self, ticket):
+        self.tt.add_ticket(ticket)
     def store(self, filename):
         slf = StandaloneResultFrame(self.tt)
         slf.store(filename)
@@ -196,9 +198,15 @@ class ViewResultsInst(view_results_interface.ViewResults):
         
         menu = MenuEx()
         menu.Append(u"Отправить выбранное повторно", self.treeResults_on_send_again, ticket)
-        menu.Append(u"Сохранить выбранное как фрейм...", self.treeResults_on_save_as_frame)
-        menu.Append(u"Отобразить...", self.treeResults_on_show_as)
-        menu.Append(u"Добавить к отображению...", self.treeResults_on_add_as)
+        menu.Append(u"Сохранить выбранное как фрейм...", self.treeResults_on_save_as_frame, ticket)
+        menu.AppendSeparator()
+        
+        view_manager = ViewManager()
+        for view_wrapper in view_manager.get_ticket_capability_list(ticket):
+            menu.Append(u"Отобразить с помощью "+view_wrapper.get_viewer_caption(), self.treeResults_on_show_as, (view_wrapper, ticket))
+        menu.AppendSeparator()
+        for view_wrapper in view_manager.get_ticket_capability_list(ticket):
+            menu.Append(u"Добавить к отображению как "+view_wrapper.get_viewer_caption(), self.treeResults_on_add_as, (view_wrapper, ticket))
         self.treeResults.PopupMenu(menu)
         
     def treeResults_on_send_again(self, event):
@@ -206,26 +214,36 @@ class ViewResultsInst(view_results_interface.ViewResults):
         menu = event.GetEventObject()
         original_ticket = menu.GetPyData(item_id)
         self.man.push_ticket(self.man.ticket(original_ticket.get_data_name(), original_ticket.get_data(), original_ticket.description))
-        #self.results_to_view.remove_ticket(itm_data[0])
-        #self.results_to_view.update_view_widget(self.lbShowableResults)
     def treeResults_on_save_as_frame(self, event):
         item_id = event.GetId()
         menu = event.GetEventObject()
-        itm_data = menu.GetPyData(item_id)
-        #self.results_to_view.remove_ticket(itm_data[0])
-        #self.results_to_view.update_view_widget(self.lbShowableResults)
+        ticket = menu.GetPyData(item_id)
+        
+        filename = None
+        wildcard = u"Сохраненные фреймы (*.frm)|*.frm|Все файлы  (*.*)|*.*"
+        dialog = wx.FileDialog(None, u"Сохранить выбранный тикет как фрейм", self.get_user_store_path(),time.ctime(time.time()) + ".frm", wildcard, wx.SAVE)
+        if dialog.ShowModal() == wx.ID_OK:
+            filename = dialog.GetPath()
+            user_store_path = os.path.dirname(os.path.realpath(filename))
+            localdb.db.write_persistent('/db/persistent/view_results/default_store_path', user_store_path)
+        dialog.Destroy()
+        if None == filename:
+            return
+        rf = ResultFrame(None)
+        rf.add_ticket(ticket)
+        rf.store(filename)
     def treeResults_on_show_as(self, event):
         item_id = event.GetId()
         menu = event.GetEventObject()
-        itm_data = menu.GetPyData(item_id)
-        #self.results_to_view.remove_ticket(itm_data[0])
-        #self.results_to_view.update_view_widget(self.lbShowableResults)
+        view_wrapper, ticket = menu.GetPyData(item_id)
+        vt = ViewTicket(ticket, view_wrapper)
+        vt.show()
     def treeResults_on_add_as(self, event):
         item_id = event.GetId()
         menu = event.GetEventObject()
-        itm_data = menu.GetPyData(item_id)
-        #self.results_to_view.remove_ticket(itm_data[0])
-        #self.results_to_view.update_view_widget(self.lbShowableResults)
+        view_wrapper, ticket = menu.GetPyData(item_id)
+        self.results_to_view.add_ticket(ticket, view_wrapper)
+        self.results_to_view.update_view_widget(self.lbShowableResults)
 
     def comboFilter_Enter_handler(self, event):
         self.show_result_frame()
@@ -234,7 +252,7 @@ class ViewResultsInst(view_results_interface.ViewResults):
     def comboFilter_handler(self, event):
         self.show_result_frame()
         
-    def btnNewFrame_handler(self, event): # wxGlade: ViewResults.<event_handler>
+    def btnNewFrame_handler(self, event):
         self.rf = ResultFrame(self.man)
 
     def get_user_store_path(self):
@@ -270,7 +288,7 @@ class ViewResultsInst(view_results_interface.ViewResults):
         except:
             print traceback.format_exc()
 
-    def btnLoadFrameRo_handler(self, event): # wxGlade: ViewResults.<event_handler>
+    def btnLoadFrameRo_handler(self, event):
         filename = None
         wildcard = u"Сохраненные фреймы (*.frm)|*.frm|Все файлы  (*.*)|*.*"
         dialog = wx.FileDialog(None, u"Загрузить фрейм для просмотра (readonly)", self.get_user_store_path(),"", wildcard, wx.OPEN)
@@ -284,7 +302,7 @@ class ViewResultsInst(view_results_interface.ViewResults):
         self.rf.load(filename, readonly=True)
         self.show_result_frame()
 
-    def btnStoreFrame_handler(self, event): # wxGlade: ViewResults.<event_handler>
+    def btnStoreFrame_handler(self, event):
         filename = None
         wildcard = u"Сохраненные фреймы (*.frm)|*.frm|Все файлы  (*.*)|*.*"
         dialog = wx.FileDialog(None, u"Сохранить фрейм", self.get_user_store_path(),time.ctime(time.time()) + ".frm", wildcard, wx.SAVE)
@@ -297,11 +315,11 @@ class ViewResultsInst(view_results_interface.ViewResults):
             return
         self.rf.store(filename)
 
-    def btnApplyFilter_handler(self, event): # wxGlade: ViewResults.<event_handler>
+    def btnApplyFilter_handler(self, event):
         self.show_result_frame()
         self.store_ticket_filter()
 
-    def btnMovePlotUp_handler(self, event): # wxGlade: ViewResults.<event_handler>
+    def btnMovePlotUp_handler(self, event):
         selection = self.lbShowableResults.GetSelection()
         if wx.NOT_FOUND == selection or selection<1:
             return
@@ -309,7 +327,7 @@ class ViewResultsInst(view_results_interface.ViewResults):
         self.results_to_view.update_view_widget(self.lbShowableResults)
         self.lbShowableResults.SetSelection(selection - 1)
 
-    def btnPlotDown_handler(self, event): # wxGlade: ViewResults.<event_handler>
+    def btnPlotDown_handler(self, event):
         selection = self.lbShowableResults.GetSelection()
         if wx.NOT_FOUND == selection or selection>=self.lbShowableResults.GetCount()-1:
             return
@@ -317,14 +335,14 @@ class ViewResultsInst(view_results_interface.ViewResults):
         self.results_to_view.update_view_widget(self.lbShowableResults)
         self.lbShowableResults.SetSelection(selection + 1)
     
-    def treeResults_activate_handler(self, event): # wxGlade: ViewResults.<event_handler>
+    def treeResults_activate_handler(self, event):
         itm = event.GetItem()
         self.treeResults.Expand(itm)
         ticket = self.treeResults.GetItemPyData(itm)
         self.results_to_view.add_ticket(ticket, None)
         self.results_to_view.update_view_widget(self.lbShowableResults)
         
-    def lbShowableResults_dblclick(self, event): # wxGlade: ViewResults.<event_handler>
+    def lbShowableResults_dblclick(self, event):
         selection = self.lbShowableResults.GetSelection()
         if wx.NOT_FOUND == selection:
             return
