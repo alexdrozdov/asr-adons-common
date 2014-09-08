@@ -7,20 +7,18 @@ import wx.grid
 import pickle
 import localdb
 import tree
+import adon_window
 
 
-class Display_localdb(interface.MyFrame):
+class Display_localdb(interface.MyFrame, adon_window.AdonWindow):
 
     def __init__(self, manager):
         self.man = manager
         interface.MyFrame.__init__(self, None, -1, "")
-        self.Bind(wx.EVT_CLOSE, self.on_form_close, self)
+        adon_window.AdonWindow.__init__(self, window_id='wnd_localdb', window_caption='')
         self.filename = localdb.db.filename
         self.root_dir = '/db'
-        #print self.filename
         tree.buildTree(self, self.root_dir)
-        #self.On_refresh_clk()
-        #print 'GetRoot:', self.tree_db.GetRootItem()
 
     def on_form_close(self, event):
         self.Hide()

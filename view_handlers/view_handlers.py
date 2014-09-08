@@ -3,18 +3,20 @@
 
 
 import wx, interface_view_handlers
+import adon_window
 
 
-class Frame_ViewHandlers(interface_view_handlers.ViewHandlers):
+class Frame_ViewHandlers(interface_view_handlers.ViewHandlers, adon_window.AdonWindow):
     def __init__(self, manager):
         interface_view_handlers.ViewHandlers.__init__(self, None, -1, "")
-        self.Bind(wx.EVT_SHOW, self.on_show, self)
-        self.Bind(wx.EVT_CLOSE, self.on_form_close, self)
+        adon_window.AdonWindow.__init__(self, window_id='wnd_view_handlers', window_caption='')
+        self.Bind(wx.EVT_SHOW, self.on_form_show, self)
         self.man = manager
 
     def on_form_close(self, event):
         self.Hide()
-    def on_show(self, evt):
+    def on_form_show(self, evt):
+        adon_window.AdonWindow.on_form_show(self, evt)
         if evt.GetShow():
             try:
                 self.tree_handlers.DeleteAllItems()

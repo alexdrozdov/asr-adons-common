@@ -11,6 +11,7 @@ import pickle
 import pprint
 import time
 import localdb
+import adon_window
 
 from view_core import *
 
@@ -130,11 +131,12 @@ class MenuEx(wx.Menu):
     def GetPyData(self, item_id):
         return self.pydata[item_id]
 
-class ViewResultsInst(view_results_interface.ViewResults):
+class ViewResultsInst(view_results_interface.ViewResults, adon_window.AdonWindow):
     def __init__(self, manager):
         view_results_interface.ViewResults.__init__(self, None, -1, "")
-        self.Bind(wx.EVT_CLOSE, self.btnClose_handler, self)
-        self.Bind(wx.EVT_SHOW,  self.OnShow_handler, self)
+        adon_window.AdonWindow.__init__(self, window_id='wnd_results', window_caption='')
+        #self.Bind(wx.EVT_CLOSE, self.btnClose_handler, self)
+        #self.Bind(wx.EVT_SHOW,  self.OnShow_handler, self)
         self.Bind(wx.EVT_CONTEXT_MENU, self.treeResults_on_right_click)
         self.lbShowableResults.Bind(wx.EVT_RIGHT_UP, self.lbShowableResults_rightclick)
         self.treeResults.SetMinSize(wx.Size(w=100, h=100))
