@@ -24,7 +24,7 @@ class Display_localdb(interface.MyFrame, adon_window.AdonWindow):
         self.Hide()
 
     def On_apply_clk(self, event):
-        value = int(self.text_ctrl_1.GetValue())
+        value = eval(self.text_ctrl_1.GetValue())
         print value
         print type(value)
         item_id = self.tree_db.GetSelection()
