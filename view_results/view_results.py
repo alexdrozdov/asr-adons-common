@@ -135,9 +135,7 @@ class ViewResultsInst(view_results_interface.ViewResults, adon_window.AdonWindow
     def __init__(self, manager):
         view_results_interface.ViewResults.__init__(self, None, -1, "")
         adon_window.AdonWindow.__init__(self, window_id='wnd_results', window_caption='')
-        #self.Bind(wx.EVT_CLOSE, self.btnClose_handler, self)
-        #self.Bind(wx.EVT_SHOW,  self.OnShow_handler, self)
-        self.Bind(wx.EVT_CONTEXT_MENU, self.treeResults_on_right_click)
+        self.treeResults.Bind(wx.EVT_RIGHT_UP, self.treeResults_on_right_click)
         self.lbShowableResults.Bind(wx.EVT_RIGHT_UP, self.lbShowableResults_rightclick)
         self.treeResults.SetMinSize(wx.Size(w=100, h=100))
         self.man = manager
