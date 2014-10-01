@@ -18,6 +18,16 @@ class PyplotPlotter(object):
             self.plot_folder = localdb.db.read_value('/db/persistent/plotters/plot/def_plot_folder')
         except:
             localdb.db.write_persistent('/db/persistent/plotters/plot/def_plot_folder', self.plot_folder)
+    def pyplot_add_plot(self, y, x=None, caption=None):
+        if None == x:
+            x = numpy.array(range(0, len(y)))
+        if None == caption:
+            caption = u"График №" + str(len(self.plots)+1)
+        self.plots.append([PyplotPlotter.is_plot, caption, x, y])
+    def pyplot_add_image(self, img, caption=None):
+        if None == caption:
+            caption = u"Изображение №" + str(len(self.plots)+1)
+        self.plots.append([PyplotPlotter.is_image, img, caption])
     def generate_plotfile(self):
         folder_name = tmpfolder.create_temporary_folder(self.plot_folder)
         py_file_name = folder_name+'plot.py'
@@ -56,15 +66,3 @@ class PyplotPlotter(object):
         py_file_name = self.generate_plotfile()
         os.system('python {0} &'.format(py_file_name))
         return
-        pyplot.ion()
-        pyplot.figure()
-        plot_cnt = 1
-        for plt in self.plots:
-            pyplot.subplot(len(self.plots), 1, plot_cnt)
-            plot_cnt += 1
-            if Plotter.is_plot==plt[0]:
-                pyplot.plot(plt[2], plt[3])
-            if Plotter.is_image==plt[0]:
-                pyplot.imshow(plt[1])
-        pyplot.show()
-

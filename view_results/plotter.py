@@ -9,15 +9,9 @@ class Plotter(PyplotPlotter):
     def __init__(self):
         PyplotPlotter.__init__(self)
     def add_plot(self, y, x=None, caption=None):
-        if None == x:
-            x = numpy.array(range(0, len(y)))
-        if None == caption:
-            caption = u"График №" + str(len(self.plots)+1)
-        self.plots.append([Plotter.is_plot, caption, x, y])
+        PyplotPlotter.pyplot_add_plot(self, y, x, caption)
     def add_image(self, img, caption=None):
-        if None == caption:
-            caption = u"Изображение №" + str(len(self.plots)+1)
-        self.plots.append([Plotter.is_image, img, caption])
+        PyplotPlotter.pyplot_add_image(self, img, caption)
     def plot(self):
         PyplotPlotter.pyplot_plot(self)
 
