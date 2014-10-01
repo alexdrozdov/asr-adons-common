@@ -17,7 +17,7 @@ class ViewerWaveletScales:
     	plotter.add_image(wavelet)
         print wavelet.shape
         for scale in range(wavelet.shape[0]-1,0, -1):
-            plotter.add_plot(wavelet[scale, :])
+            plotter.add_plot(wavelet[scale, :], caption='Scale={0}'.format(scale-1))
 
 
 def init_module(manager, gui):
