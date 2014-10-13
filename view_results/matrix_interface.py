@@ -15,17 +15,20 @@ class MatrixFrame(wx.Frame):
         # begin wxGlade: MatrixFrame.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        self.matr = wx.grid.Grid(self, -1, size=(1, 1))
-        self.label_1 = wx.StaticText(self, -1, u"Размерность матрицы:")
-        self.dimension = wx.TextCtrl(self, -1, "")
-        self.label_2 = wx.StaticText(self, -1, u"Срезы")
-        self.btn_trans = wx.Button(self, -1, u"Транспонировать")
-        self.btn_plt = wx.Button(self, -1, u"Построить")
-        self.btn_save = wx.Button(self, -1, u"Сохранить в файл")
+        self.lbMatrixes = wx.ListBox(self, wx.ID_ANY, choices=[], style=wx.LB_SINGLE | wx.LB_HSCROLL)
+        self.matr = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
+        self.label_1 = wx.StaticText(self, wx.ID_ANY, u"\u0420\u0430\u0437\u043c\u0435\u0440\u043d\u043e\u0441\u0442\u044c \u043c\u0430\u0442\u0440\u0438\u0446\u044b:")
+        self.dimension = wx.TextCtrl(self, wx.ID_ANY, "", style=wx.TE_READONLY)
+        self.label_2 = wx.StaticText(self, wx.ID_ANY, u"\u0421\u0440\u0435\u0437\u044b")
+        self.btn_trans = wx.Button(self, wx.ID_ANY, u"\u0422\u0440\u0430\u043d\u0441\u043f\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u0442\u044c")
+        self.btn_plt = wx.Button(self, wx.ID_ANY, u"\u041f\u043e\u0441\u0442\u0440\u043e\u0438\u0442\u044c")
+        self.btn_save = wx.Button(self, wx.ID_ANY, u"\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u0432 \u0444\u0430\u0439\u043b")
 
         self.__set_properties()
         self.__do_layout()
 
+        self.Bind(wx.EVT_LISTBOX_DCLICK, self.lbMatrixes_on_select, self.lbMatrixes)
+        self.Bind(wx.EVT_LISTBOX, self.lbMatrixes_on_select, self.lbMatrixes)
         self.Bind(wx.EVT_BUTTON, self.On_btn_trans, self.btn_trans)
         self.Bind(wx.EVT_BUTTON, self.On_btn_plt, self.btn_plt)
         self.Bind(wx.EVT_BUTTON, self.On_btn_save, self.btn_save)
@@ -33,33 +36,37 @@ class MatrixFrame(wx.Frame):
 
     def __set_properties(self):
         # begin wxGlade: MatrixFrame.__set_properties
-        self.SetTitle(u"Отображение матрицы")
-        self.matr.CreateGrid(0, 0)
+        self.SetTitle(u"\u041e\u0442\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435 \u043c\u0430\u0442\u0440\u0438\u0446\u044b")
+        self.SetSize((700, 600))
+        self.matr.CreateGrid(0, 1)
         self.matr.SetRowLabelSize(30)
+        self.matr.SetColLabelValue(0, "")
         self.matr.SetMinSize((503, 200))
-        self.dimension.SetMinSize((60, 21))
         # end wxGlade
 
     def __do_layout(self):
         # begin wxGlade: MatrixFrame.__do_layout
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+        sizer_1 = wx.FlexGridSizer(1, 2, 0, 0)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
         sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_2.Add(self.matr, 1, wx.EXPAND, 0)
+        sizer_1.Add(self.lbMatrixes, 0, wx.EXPAND, 0)
+        sizer_2.Add(self.matr, 1, wx.EXPAND | wx.FIXED_MINSIZE, 0)
         sizer_4.Add(self.label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-        sizer_4.Add(self.dimension, 0, wx.LEFT, 10)
-        sizer_2.Add(sizer_4, 0, wx.TOP|wx.EXPAND, 10)
+        sizer_4.Add(self.dimension, 0, wx.LEFT | wx.EXPAND, 10)
+        sizer_2.Add(sizer_4, 0, wx.TOP | wx.EXPAND, 10)
         sizer_5.Add(self.label_2, 0, 0, 0)
-        sizer_2.Add(sizer_5, 0, wx.TOP|wx.EXPAND, 10)
+        sizer_2.Add(sizer_5, 0, wx.TOP | wx.EXPAND, 10)
         sizer_3.Add(self.btn_trans, 0, 0, 0)
         sizer_3.Add(self.btn_plt, 0, wx.LEFT, 10)
         sizer_3.Add(self.btn_save, 0, wx.LEFT, 10)
-        sizer_2.Add(sizer_3, 0, wx.TOP|wx.EXPAND, 26)
+        sizer_2.Add(sizer_3, 0, wx.TOP | wx.EXPAND, 26)
         sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
-        sizer_1.Fit(self)
+        sizer_1.AddGrowableRow(0)
+        sizer_1.AddGrowableCol(0)
+        sizer_1.AddGrowableCol(1)
         self.Layout()
         # end wxGlade
 
@@ -75,6 +82,9 @@ class MatrixFrame(wx.Frame):
         print "Event handler `On_btn_save' not implemented!"
         event.Skip()
 
+    def lbMatrixes_on_select(self, event):  # wxGlade: MatrixFrame.<event_handler>
+        print "Event handler 'lbMatrixes_on_select' not implemented!"
+        event.Skip()
 # end of class MatrixFrame
 
 
