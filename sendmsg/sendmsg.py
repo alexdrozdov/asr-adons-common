@@ -83,6 +83,7 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
         self.Bind(wx.EVT_SHOW, self.on_show, self)
         self.Bind(wx.EVT_CLOSE, self.on_form_close, self)
         self.Bind(wx.grid.EVT_GRID_CMD_CELL_CHANGE, self.gridHosts_on_cell_changed, self.gridHosts)
+        self.Bind(wx.grid.EVT_GRID_CMD_CELL_LEFT_CLICK, self.gridRcvPorts_on_cell_click, self.gridHosts)
         self.Bind(wx.grid.EVT_GRID_CMD_CELL_CHANGE, self.gridRcvPorts_on_cell_changed, self.gridRcvPorts)
         self.man = manager
         self.remote_hosts = []
@@ -130,12 +131,15 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
                 self.gridHosts.SetCellValue(r_cnt, 0, h.get_channel())
                 self.gridHosts.SetCellValue(r_cnt, 1, h.get_address())
                 self.gridHosts.SetCellValue(r_cnt, 2, h.get_channel_params())
+                if not h.get_enabled():
+                    self.gridHosts.SetCellBackgroundColour(r_cnt, 0, 'GRAY')
+                    self.gridHosts.SetCellBackgroundColour(r_cnt, 1, 'GRAY')
+                    self.gridHosts.SetCellBackgroundColour(r_cnt, 2, 'GRAY')
                 r_cnt += 1
         except:
             print traceback.format_exc()
             
     def _fill_host_messages_list(self, host):
-        #print dir(self.listSendMessages)
         self.listSendMessages.ClearAll()
         self.listSendMessages.InsertColumn(0, u"Типы сообщений", width=300)
         for m in host.messages_to_send:
@@ -149,11 +153,11 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
         except:
             print traceback.format_exc()
 
-    def btnAddHost_on_click(self, event): # wxGlade: SendMessageInterface.<event_handler>
+    def btnAddHost_on_click(self, event):
         self.remote_hosts.append(UdpConnectionInfo())
         self._fill_hosts_list()
 
-    def btnRemoveHost_on_click(self, event): # wxGlade: SendMessageInterface.<event_handler>
+    def btnRemoveHost_on_click(self, event):
         try:
             sel_rows = self.gridHosts.GetSelectedRows()
             rh = []
@@ -166,15 +170,27 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
         except:
             print traceback.format_exc()
 
-    def btnDisableHost_on_click(self, event): # wxGlade: SendMessageInterface.<event_handler>
-        print "Event handler `btnDisableHost_on_click' not implemented!"
-        event.Skip()
+    def btnEnableHost_on_click(self, event):
+        try:
+            h = self.get_selected_host()
+            if None==h:
+                return
+            h.set_enabled(True)
+            self._fill_hosts_list()
+        except:
+            print traceback.format_exc()
+ 
+    def btnDisableHost_on_click(self, event): 
+        try:
+            h = self.get_selected_host()
+            if None==h:
+                return
+            h.set_enabled(False)
+            self._fill_hosts_list()
+        except:
+            print traceback.format_exc()
 
-    def btnScanHosts_on_click(self, event): # wxGlade: SendMessageInterface.<event_handler>
-        print "Event handler `btnScanHosts_on_click' not implemented!"
-        event.Skip()
-        
-    def gridHosts_on_cell_changed(self, event): # wxGlade: UdpConfigInterface.<event_handler>
+    def gridHosts_on_cell_changed(self, event):
         try:
             r = event.GetRow()
             h = self.remote_hosts[r]
@@ -182,15 +198,28 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
             h.set_channel_params(self.gridHosts.GetCellValue(r, 2))
         except:
             print traceback.format_exc()
+    def gridRcvPorts_on_cell_click(self, event):
+        try:
+            r = event.GetRow()
+            if r < 0:
+                return
+            h = self.remote_hosts[r]
+            if None == h:
+                return
+            self._fill_host_messages_list(h)
+        except:
+            print traceback.format_exc()
+        event.Skip()
 
     def comboSendMessages_on_select(self, event): # wxGlade: SendMessageInterface.<event_handler>
         pass
 
     def get_selected_host(self):
         sel_rows = self.gridHosts.GetSelectedRows()
-        if len(sel_rows) != 1:
-            return None
-        r = sel_rows[0]
+        if len(sel_rows) == 1:
+            r = sel_rows[0]
+            return self.remote_hosts[r]
+        r = self.gridHosts.GetGridCursorRow()
         return self.remote_hosts[r]
     
     def btnAddSendMessage_on_click(self, event): # wxGlade: SendMessageInterface.<event_handler>
@@ -199,6 +228,7 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
                 return
             h = self.get_selected_host()
             if None == h:
+                print "Host not selected"
                 return
             msg_name = self.comboSendMessages.GetValue()
             if not msg_name in h.messages_to_send:
@@ -252,7 +282,7 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
     def gridRcvPorts_on_select(self, event): # wxGlade: SendMessageInterface.<event_handler>
         pass
     
-    def gridRcvPorts_on_cell_changed(self, event): # wxGlade: UdpConfigInterface.<event_handler>
+    def gridRcvPorts_on_cell_changed(self, event):
         try:
             r = event.GetRow()
             h = self.rcv_ports[r]
@@ -260,7 +290,7 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
         except:
             print traceback.format_exc()
 
-    def btnCancel_on_click(self, event): # wxGlade: SendMessageInterface.<event_handler>
+    def btnCancel_on_click(self, event):
         self.Hide()
     
     def _save_to_localdb(self):

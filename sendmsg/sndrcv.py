@@ -35,6 +35,8 @@ class SndDaemon(object):
     def __build_sndmsg_list(self, remote_hosts):
         msglist = []
         for rh in remote_hosts:
+            if not rh.get_enabled():
+                continue
             for m in rh.messages_to_send:
                 if m in msglist:
                     continue
