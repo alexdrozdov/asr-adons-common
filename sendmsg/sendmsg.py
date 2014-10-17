@@ -106,7 +106,9 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
             self._fill_rcv_list()
     def _fill_rcv_list(self):
         try:
+            selected_r =0 
             try:
+                selected_r = self.gridRcvPorts.GetGridCursorRow()
                 self.gridRcvPorts.DeleteRows(0, self.gridRcvPorts.GetNumberRows(), True)
             except:
                 pass
@@ -115,13 +117,20 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
                 self.gridRcvPorts.AppendRows(1, True)
                 self.gridRcvPorts.SetCellValue(r_cnt, 0, p.get_channel())
                 self.gridRcvPorts.SetCellValue(r_cnt, 1, p.get_channel_params())
+                if not p.get_enabled():
+                    self.gridRcvPorts.SetCellBackgroundColour(r_cnt, 0, 'GRAY')
+                    self.gridRcvPorts.SetCellBackgroundColour(r_cnt, 1, 'GRAY')
                 r_cnt += 1
+            if None!=selected_r and selected_r>=0:
+                self.gridRcvPorts.SetGridCursor(selected_r, 0)
         except:
             print traceback.format_exc()
                         
     def _fill_hosts_list(self):
         try:
+            selected_r = 0
             try:
+                selected_r = self.gridHosts.GetGridCursorRow()
                 self.gridHosts.DeleteRows(0, self.gridHosts.GetNumberRows(), True)
             except:
                 pass
@@ -136,6 +145,8 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
                     self.gridHosts.SetCellBackgroundColour(r_cnt, 1, 'GRAY')
                     self.gridHosts.SetCellBackgroundColour(r_cnt, 2, 'GRAY')
                 r_cnt += 1
+            if None!=selected_r and selected_r>=0:
+                self.gridHosts.SetGridCursor(selected_r, 0)
         except:
             print traceback.format_exc()
             
@@ -222,7 +233,7 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
         r = self.gridHosts.GetGridCursorRow()
         return self.remote_hosts[r]
     
-    def btnAddSendMessage_on_click(self, event): # wxGlade: SendMessageInterface.<event_handler>
+    def btnAddSendMessage_on_click(self, event):
         try:
             if self.comboSendMessages.GetSelection() < 0:
                 return
@@ -236,8 +247,22 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
             self._fill_host_messages_list(h)
         except:
             print traceback.format_exc()
+    
+    def btnAddAllSendMessage_on_click(self, event):
+        try:
+            h = self.get_selected_host()
+            if None == h:
+                print "Host not selected"
+                return
+            for k in self.man.handlers.keys():
+                msg_name = str(self.man.dis.get_name_by_id(k))
+                if not msg_name in h.messages_to_send:
+                    h.messages_to_send.append(msg_name)
+            self._fill_host_messages_list(h)
+        except:
+            print traceback.format_exc()
 
-    def btnRemoveSendMessage_on_click(self, event): # wxGlade: SendMessageInterface.<event_handler>
+    def btnRemoveSendMessage_on_click(self, event):
         try:
             host = self.get_selected_host()
             if None == host:
@@ -262,12 +287,14 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
         self.rcv_ports.append(UdpRcvPort())
         self._fill_rcv_list()
 
-    def btnRemoveRcvPort_on_click(self, event): # wxGlade: SendMessageInterface.<event_handler>
+    def btnRemoveRcvPort_on_click(self, event): 
         try:
-            sel_rows = self.gridRcvPorts.GetSelectedRows()
-            rh = []
+            r = self.gridRcvPorts.GetGridCursorRow()
+            if None==r or r<0:
+                return
+            rp = []
             for r_cnt in range(len(self.rcv_ports)):
-                if r_cnt in sel_rows:
+                if r_cnt==r:
                     continue
                 rp.append(self.rcv_ports[r_cnt])
             self.rcv_ports = rp
@@ -275,11 +302,27 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
         except:
             print traceback.format_exc()
 
-    def btnDisableRcvPort_on_click(self, event): # wxGlade: SendMessageInterface.<event_handler>
-        print "Event handler `btnDisableRcvPort_on_click' not implemented!"
-        event.Skip()
-        
-    def gridRcvPorts_on_select(self, event): # wxGlade: SendMessageInterface.<event_handler>
+    def btnEnableRcvPort_on_click(self, event):
+        try:
+            r = self.gridRcvPorts.GetGridCursorRow()
+            if None==r or r<0:
+                return
+            self.rcv_ports[r].set_enabled(True)
+            self._fill_rcv_list()
+        except:
+            print traceback.format_exc()
+    
+    def btnDisableRcvPort_on_click(self, event):
+        try:
+            r = self.gridRcvPorts.GetGridCursorRow()
+            if None==r or r<0:
+                return
+            self.rcv_ports[r].set_enabled(False)
+            self._fill_rcv_list()
+        except:
+            print traceback.format_exc()
+
+    def gridRcvPorts_on_select(self, event):
         pass
     
     def gridRcvPorts_on_cell_changed(self, event):
