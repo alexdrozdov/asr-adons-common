@@ -28,17 +28,27 @@ class RemoteHostConnectionInfo:
     def get_enabled(self):
         return self.enabled
     
-class UdpConnectionInfo(RemoteHostConnectionInfo):
+class TcpipConnectionInfo(RemoteHostConnectionInfo):
     def __init__(self, params=None):
         if None==params:
-            params={"ip":"255.255.255.255", "port":1000}
+            params={"ip":"255.255.255.255", "port":1000, "channel":"udp"}
         RemoteHostConnectionInfo.__init__(self, params)
     def get_channel(self):
-        return "udp"
+        return self.params["channel"]
     def get_address(self):
         return self.params["ip"]
     def get_channel_params(self):
         return str(self.params["port"])
+    def set_channel(self, channel):
+        channel = channel.lower()
+        if channel=="udp" or channel=="tcp":
+            self.params["channel"] = channel
+            return
+        if channel=="rdma":
+            raise ValueError(u"Эта версия sendrcv не поддерживает rDMA. Поддержка rDMA и cc-connect входит в пакет dCluster")
+        if channel=="cc-connect":
+            raise ValueError(u"Эта версия sendrcv не поддерживает cc-connect. Поддержка rDMA и cc-connect входит в пакет dCluster")
+        raise ValueError(u"Неизвестный протокол "+channel);
     def set_address(self, address):
         self.params["ip"] = address
     def set_channel_params(self, param_string):
@@ -62,15 +72,25 @@ class RcvPort(object):
         return self.enabled
     
     
-class UdpRcvPort(RcvPort):
+class TcpipRcvPort(RcvPort):
     def __init__(self, params=None):
         if None==params:
-            params={"port":1000}
+            params={"port":1000, "channel":"udp"}
         RcvPort.__init__(self, params)
     def get_channel(self):
-        return "udp"
+        return self.params["channel"]
     def get_channel_params(self):
         return str(self.params["port"])
+    def set_channel(self, channel):
+        channel = channel.lower()
+        if channel=="udp" or channel=="tcp":
+            self.params["channel"] = channel
+            return
+        if channel=="rdma":
+            raise ValueError(u"Эта версия sendrcv не поддерживает rDMA. Поддержка rDMA и cc-connect входит в пакет dCluster")
+        if channel=="cc-connect":
+            raise ValueError(u"Эта версия sendrcv не поддерживает cc-connect. Поддержка rDMA и cc-connect входит в пакет dCluster")
+        raise ValueError(u"Неизвестный протокол "+channel);
     def set_channel_params(self, param_string):
         self.params["port"] = int(param_string)
         if self.params["port"]<1 or self.params["port"]>65535:
@@ -165,7 +185,7 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
             print traceback.format_exc()
 
     def btnAddHost_on_click(self, event):
-        self.remote_hosts.append(UdpConnectionInfo())
+        self.remote_hosts.append(TcpipConnectionInfo())
         self._fill_hosts_list()
 
     def btnRemoveHost_on_click(self, event):
@@ -205,6 +225,7 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
         try:
             r = event.GetRow()
             h = self.remote_hosts[r]
+            h.set_channel(self.gridHosts.GetCellValue(r, 0))
             h.set_address(self.gridHosts.GetCellValue(r, 1))
             h.set_channel_params(self.gridHosts.GetCellValue(r, 2))
         except:
@@ -284,7 +305,7 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
             print traceback.format_exc()
         
     def btnAddRcvPort_on_click(self, event):
-        self.rcv_ports.append(UdpRcvPort())
+        self.rcv_ports.append(TcpipRcvPort())
         self._fill_rcv_list()
 
     def btnRemoveRcvPort_on_click(self, event): 
@@ -329,6 +350,7 @@ class SendMsgInterface(sendmsg_interface.SendMessageInterface, adon_window.AdonW
         try:
             r = event.GetRow()
             h = self.rcv_ports[r]
+            h.set_channel(self.gridRcvPorts.GetCellValue(r,0))
             h.set_channel_params(self.gridRcvPorts.GetCellValue(r, 1))
         except:
             print traceback.format_exc()

@@ -55,25 +55,10 @@ class MatrixFrame(matrix_interface.MatrixFrame):
                     self.matr.SetCellValue(i, j, str(eval(slices)[i][j])) #array[num]
     
     def On_btn_trans(self, event):
-        matrix = []
-        for i in range(self.matr.GetNumberRows()):
-            matr_str = []
-            for j in range(self.matr.GetNumberCols()):
-                matr_str.append(int(self.matr.GetCellValue(i, j)))
-            matrix.append(matr_str)
-        matrix = np.array(matrix)
-        T_array = matrix.T
-        rows = len(T_array)
-        cols = len(T_array[0])
-        self.matr.DeleteCols(0, self.matr.GetNumberCols())
-        self.matr.DeleteRows(0, self.matr.GetNumberRows())
-        self.matr.AppendRows(rows)
-        self.matr.AppendCols(cols)
-        for i in range(self.matr.GetNumberCols()):
-            self.matr.SetColLabelValue(i, str(i+1))
-        for i in range(len(T_array)):
-            for j in range(len(T_array[i])):
-                self.matr.SetCellValue(i, j, str(T_array[i][j]))
+        if None==self.matrix:
+            return
+        self.matrix = self.matrix.T
+        self.show_matrix(self.matrix)
 
     def On_btn_save(self, event):
         num_rows = self.matr.GetNumberRows()
@@ -103,37 +88,30 @@ class MatrixFrame(matrix_interface.MatrixFrame):
         self.matrix = matrix
         if None==self.matrix:
             return
-        self.dimension.Enable(False)
-        self.dimension.SetValue(str(len(self.matrix.shape)))
-        left = 0
-        dictionary = {}
-        str_slice_rows = 'self.matrix'
-        form_obj = []
-        if len(self.matrix.shape)>1:
-            for i in range(len(self.matrix.shape[:-2])):
-                right = self.matrix.shape[i]
-                dictionary['self.slice_' + str(i)] = wx.SpinCtrl(self, -1, "0", min=left, max=right-1)
-                vars()['self.slice_' + str(i)] = dictionary['self.slice_' + str(i)]
-                self.sizer_5.Add(vars()['self.slice_' + str(i)], 0, wx.LEFT, 10)
-                form_obj.append(vars()['self.slice_' + str(i)])
-                func = functools.partial(self.On_spin_clk, slice_num = i, form_obj = form_obj)
-                self.Bind(wx.EVT_SPINCTRL, func)
-                str_slice_rows = str_slice_rows + '[0]'
-            str_slice_cols = str_slice_rows + '[0]'
-        else:
-            str_slice_cols = "[0]"
         try:
             self.matr.DeleteRows(0, self.matr.NumberRows)
             self.matr.DeleteCols(0, self.matr.NumberCols)
         except:
             pass
-        self.matr.AppendRows(len(eval(str_slice_rows)))
-        self.matr.AppendCols(len(eval(str_slice_cols)))
-        for i in range(self.matr.GetNumberCols()):
-            self.matr.SetColLabelValue(i, str(i+1))
-        for i in range(len(eval(str_slice_rows))):
-            for j in range(len(eval(str_slice_rows)[i])):
-                self.matr.SetCellValue(i, j, str(eval(str_slice_rows)[i][j]))
+        is_array = False
+        is_matrix = False
+        if len(self.matrix.shape)==1:
+            grid_row_count = self.matrix.shape[0]
+            grid_col_count = 1
+            is_array = True
+        else:
+            grid_row_count = self.matrix.shape[0]
+            grid_col_count = self.matrix.shape[1]
+            is_matrix = True
+        self.matr.AppendRows(grid_row_count)
+        self.matr.AppendCols(grid_col_count)
+        if is_array:
+            for i in range(grid_row_count):
+                self.matr.SetCellValue(i, 0, str(self.matrix[i]))
+        if is_matrix:
+            for i in range(grid_row_count):
+                for j in range(grid_col_count):
+                    self.matr.SetCellValue(i, j, str(self.matrix[i,j]))
     def plot(self): 
         matrix_list = [m[0] for m in self.matrixes]
     	self.lbMatrixes.SetItems(matrix_list)
